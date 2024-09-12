@@ -1,0 +1,26 @@
+name: user
+records: 4
+implementation: em.entity.entities.PostgresMockEntity
+fields:
+  - name: name
+    type: constant
+    seeds:
+    - Alex
+    - Peter
+    - John
+    - Mike
+  - name: nick_name
+    type: random
+    nullable: True
+    seeds:
+    - Elephan
+    - Monkey
+    - Holiday
+  - name: age
+    type: random_int
+    min: 10
+    max: 35
+  - name: created_at
+    type: current_timestamp
+  - name: updated_at
+    type: current_timestamp
