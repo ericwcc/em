@@ -16,11 +16,15 @@ fields:
     - Elephan
     - Monkey
     - Holiday
-  - name: age
+  - name: salary
     type: random_int
-    min: 10
-    max: 35
+    min: 100
+    max: 350
+    precision: 10
+  - name: registered_at
+    type: current_datetime
+    precision: hour
   - name: created_at
-    type: current_timestamp
+    type: current_datetime
   - name: updated_at
-    type: current_timestamp
+    type: current_datetime

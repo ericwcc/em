@@ -97,6 +97,9 @@ class PostgresMockEntity(MockEntity):
     def load_records(self) -> None:
         pass
 
+    def get_schema(self) -> str:
+        return self.spec.schema if self.spec.schema else 'public'
+
     def insertall(self, records: List[Dict[str, Any]]) -> None:
         all_values = []
         for record in records:
@@ -106,7 +109,7 @@ class PostgresMockEntity(MockEntity):
         self.print_table(columns, all_values)
 
         query = sql.SQL('INSERT INTO {table} ({columns}) VALUES ({placeholders})').format(
-            table=sql.Identifier(self.spec.schema, self.spec.name),
+            table=sql.Identifier(self.get_schema(), self.spec.name),
             columns=sql.SQL(',').join(map(sql.Identifier, columns)),
             placeholders=sql.SQL(',').join(sql.Placeholder() * len(columns))
         )

@@ -20,8 +20,8 @@ from em.entity.entities import (
 
 from em.entity.mockers import (
     FieldMocker,
-    CurrentTimestampFieldMocker,
-    RandomTimestampFieldMocker,
+    CurrentDateTimeFieldMocker,
+    RandomDateTimeFieldMocker,
     CustomFieldMocker,
     RandomDecimalFieldMocker,
     RandomIntFieldMocker,
@@ -85,8 +85,8 @@ def main(**kwargs):
             'random': RandomFieldMocker,
             'random_int': RandomIntFieldMocker,
             'random_decimal': RandomDecimalFieldMocker,
-            'current_timestamp': CurrentTimestampFieldMocker,
-            'random_timestamp': RandomTimestampFieldMocker
+            'current_datetime': CurrentDateTimeFieldMocker,
+            'random_datetime': RandomDateTimeFieldMocker
         }
 
         field_specs: Dict[str, MockEntityFieldSpec] = { field_spec.name: field_spec for field_spec in entity_spec.fields }

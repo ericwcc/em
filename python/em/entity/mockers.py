@@ -4,6 +4,7 @@ from em.entity.entities import (
 )
 from em.entity.specs import (
     MockEntityFieldSpec,
+    TimePrecisionType
 )
 from em.entity.seeders import (
     FieldSeeder,
@@ -98,27 +99,34 @@ class ConstantFieldMocker(FieldMocker):
         if not self.seeds:
             raise Exception(f'Seeds must be provided, field={self.spec.name}')
         return self.seeds[context.index % len(self.seeds)]
-
-class TimestampFieldMocker(FieldMocker):
+    
+class RandomDateTimeFieldMocker(FieldMocker):
     def __init__(self, spec: MockEntityFieldSpec, seeder: FieldSeeder = None):
         super().__init__(spec, seeder)
         now = datetime.now()
         self.min_dt = datetime.strptime(self.spec.min, self.spec.format) if self.spec.min else now - timedelta(hours=24)
         self.max_dt = datetime.strptime(self.spec.max, self.spec.format) if self.spec.max else now
         self.interval_td = self.parse_interval_dt(self.spec.interval)
+    
+    def mock(self, context: MockContext, entity: type[MockEntity]) -> Any:
+        timeslots = (self.max_dt - self.min_dt) // self.interval_td
+        return self.min_dt + self.interval_td * random.randint(0, timeslots)
 
     def parse_interval_dt(self, value: str) -> int:
         count = int(value[:-1])
         unit = value[-1]
         allowed_units = {'s': 'seconds', 'm': 'minutes', 'h': 'hours'}
         return timedelta(**{allowed_units[unit]: count}) if unit in allowed_units else None
-    
-class RandomTimestampFieldMocker(TimestampFieldMocker):
-    def mock(self, context: MockContext, entity: type[MockEntity]) -> Any:
-        timeslots = (self.max_dt - self.min_dt) // self.interval_td
-        return self.min_dt + self.interval_td * random.randint(0, timeslots)
 
-class CurrentTimestampFieldMocker(TimestampFieldMocker):
+class CurrentDateTimeFieldMocker(FieldMocker):
     def mock(self, context: MockContext, entity: type[MockEntity]) -> Any:
-        return datetime.now()
+        dt = datetime.now()
+        if isinstance(self.spec.precision, TimePrecisionType):
+            if self.spec.precision == TimePrecisionType.HOUR:
+                dt = dt.replace(minute=0, second=0, microsecond=0)
+            elif self.spec.precision == TimePrecisionType.MINUTE:
+                dt = dt.replace(second=0, microsecond=0)
+            elif self.spec.precision == TimePrecisionType.SECOND:
+                dt = dt.replace(microsecond=0)
+        return dt
         
