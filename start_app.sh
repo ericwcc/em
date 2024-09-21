@@ -1,2 +1,2 @@
 #!/bin/bash
-PYTHONPATH=/workspaces/em/python:/workspaces/em/input POSTGRES_HOST=host.docker.internal POSTGRES_DATABASE=postgres POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres python python/em --input_dir ./input --scenario init --debug
+PYTHONPATH=/workspaces/em/python:/workspaces/em/examples/postgres/input/entity POSTGRES_HOST=host.docker.internal POSTGRES_DATABASE=postgres POSTGRES_USER=postgres POSTGRES_PASSWORD=a123456 python python/em --input_dir ./examples/postgres/input --scenario init --debug
