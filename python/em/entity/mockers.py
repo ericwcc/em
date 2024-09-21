@@ -3,6 +3,7 @@ from em.entity.entities import (
     MockEntity
 )
 from em.entity.specs import (
+    ScenarioEntitySpec,
     MockEntityFieldSpec,
     TimePrecisionType
 )
@@ -46,18 +47,18 @@ class FieldMocker(ABC):
         return self.spec.name
     
 class EntityMocker:
-    def __init__(self, spec: MockEntitySpec, entity: type[MockEntity], field_mockers: List[type[FieldMocker]]):
-        self.spec = spec
+    def __init__(self, entity_spec: MockEntitySpec, entity: type[MockEntity], field_mockers: List[type[FieldMocker]]):
+        self.entity_spec = entity_spec
         self.entity = entity
         self.field_mockers  = field_mockers
     
     def load_entity_records(self):
         self.entity.load_records()
 
-    def mock(self):
-        logger.debug(f'Mock {self.spec.name} entity')
+    def mock(self, scenario_entity_spec: ScenarioEntitySpec):
+        logger.debug(f'Mock {self.entity_spec.name} entity')
         records = []
-        for i in range(self.spec.records):
+        for i in range(scenario_entity_spec.records):
             updating = {}
             for field_mocker in self.field_mockers:
                 field_mocker.load_seeds()

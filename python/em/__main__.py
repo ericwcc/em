@@ -33,8 +33,11 @@ from em.entity.mockers import EntityMocker
 from em.utils.import_utils import load_class
 
 from em.entity.specs import (
+    Spec,
     MockEntitySpec,
-    MockEntityFieldSpec
+    MockEntityFieldSpec,
+    SpecType,
+    ScenarioSpec,
 )
 
 def main(**kwargs):
@@ -45,7 +48,7 @@ def main(**kwargs):
     input_files = kwargs['input_file'] + [ os.path.join(input_dir, input_file) for input_dir in kwargs['input_dir'] for input_file in os.listdir(input_dir) ]
     input_files = set(input_files)
 
-    logger.info(f'Scanning {len(input_files)} input files, files={input_files}')
+    scenario_specs: Dict[str, ScenarioSpec] = {}
 
     entity_specs: Dict[str, MockEntitySpec] = {}
     entity_deps: Dict[str, Set[str]] = {}
@@ -62,12 +65,20 @@ def main(**kwargs):
         # load yaml
         with open(input_file) as f:
             input_data = yaml.safe_load(f)
-        # convert yaml to pydantic
-        entity_spec = MockEntitySpec(**input_data)
-        entity_specs[entity_spec.name] = entity_spec
-        # build entity_deps
-        entity_deps[entity_spec.name] = { field_spec.seedsFromEntity.name for field_spec in entity_spec.fields if field_spec.seedsFromEntity }
+        
+        spec = Spec(**input_data)
+        if spec.kind == SpecType.SCENARIO:
+            scenario_spec = spec.spec
+            scenario_specs[scenario_spec.name] = scenario_spec
+        elif spec.kind == SpecType.ENTITY:
+            # convert yaml to pydantic
+            entity_spec = spec.spec
+            entity_specs[entity_spec.name] = entity_spec
+            # build entity_deps
+            entity_deps[entity_spec.name] = { field_spec.seedsFromEntity.name for field_spec in entity_spec.fields if field_spec.seedsFromEntity }
 
+    logger.info(f'Loaded {len(scenario_specs)} scenarios and {len(entity_specs)} entities, scenarios={list(scenario_specs.keys())}, entities={list(entity_specs.keys())}')
+    
     entity_impls: Dict[str, type[MockEntity]] = {}
 
     # build entity mockers
@@ -123,15 +134,28 @@ def main(**kwargs):
         entity_mockers.append(entity_mocker)
 
     # start mock
-    for entity_mocker in entity_mockers:
-        entity_mocker.load_entity_records()
-        entity_mocker.mock()
+    scenario_name = kwargs['scenario']
+    if len(scenario_specs) == 0:
+        for entity_mocker in entity_mockers:
+            entity_mocker.load_entity_records()
+            entity_mocker.mock(1)
+    elif scenario_name:
+        logger.info(f'Run scenario, name={scenario_name}')
+        scenario_spec = scenario_specs[scenario_name]
+        scenario_entity_specs = { scenario_entity_spec.name: scenario_entity_spec for scenario_entity_spec in scenario_spec.entities }
+        for entity_mocker in entity_mockers:
+            scenario_entity_spec = scenario_entity_specs.get(entity_mocker.entity_spec.name)
+            if scenario_entity_spec:
+                entity_mocker.load_entity_records()
+                entity_mocker.mock(scenario_entity_spec)
+    else:
+        raise Exception(f'A scenario must be specified, scenarios={list(scenario_specs.keys())}')
 
 parser = argparse.ArgumentParser(description='Mock database data')
 parser.add_argument('--debug', action='store_true', help='Enable debug log')
 parser.add_argument('--input_dir', type=str, action='append', default=[], help='Directory that contains input yaml files')
 parser.add_argument('--input_file', type=str, action='append', default=[], help='Yaml file')
-# parser.add_argument('-y', '--yes', action='store_true', help='Automatic yes prompts')
+parser.add_argument('--scenario', type=str, default=None, required=False, help='Scenario')
 
 args = parser.parse_args()
 args_dict = vars(args)

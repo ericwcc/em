@@ -1,0 +1,7 @@
+kind: Scenario
+spec:
+  name: init
+  description: run once
+  entities:
+  - name: user
+    records: 1

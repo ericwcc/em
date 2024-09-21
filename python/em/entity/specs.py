@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional, List, Union
+from typing import List, Union
 from enum import Enum
 
 class RandomDecimalPrecisionType(int, Enum):
@@ -50,9 +50,25 @@ class MockEntityFieldSpec(BaseModel):
     # random int/decimal field
     precision: Union[RandomIntPrecisionType, RandomDecimalPrecisionType, TimePrecisionType] = None
 
+class SpecType(str, Enum):
+    SCENARIO = 'Scenario'
+    ENTITY = 'Entity'
+
 class MockEntitySpec(BaseModel):
     name: str
     implementation: str = None
     fields: List[MockEntityFieldSpec]
+    schema: str = None # postgres
+
+class ScenarioEntitySpec(BaseModel):
+    name: str
     records: int = 1
-    schema: str = None
+
+class ScenarioSpec(BaseModel):
+    name: str
+    description: str = None
+    entities: List[ScenarioEntitySpec] = []
+
+class Spec(BaseModel):
+    kind: SpecType
+    spec: Union[ScenarioSpec, MockEntitySpec]
