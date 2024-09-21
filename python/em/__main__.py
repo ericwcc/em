@@ -45,8 +45,11 @@ def main(**kwargs):
         logger.remove(0)
         logger.add(sys.stderr, level='INFO')
     
-    input_files = kwargs['input_file'] + [os.path.join(root, file) for root, _, files in os.walk(kwargs['input_dir']) for file in files]
+    input_files = kwargs['input_file'] + [ os.path.join(root, file) for root, _, files in os.walk(kwargs['input_dir']) for file in files ]
     input_files = set(input_files)
+
+    if len(input_files) == 0:
+        raise Exception(f'input files must be specified with --input_dir or --input_file')
 
     scenario_specs: Dict[str, ScenarioSpec] = {}
 
@@ -140,16 +143,22 @@ def main(**kwargs):
             entity_mocker.load_entity_records()
             entity_mocker.mock(1)
     elif scenario_name:
-        logger.info(f'Run scenario, name={scenario_name}')
         scenario_spec = scenario_specs[scenario_name]
         scenario_entity_specs = { scenario_entity_spec.name: scenario_entity_spec for scenario_entity_spec in scenario_spec.entities }
+        
+        # check if all entities in the scenario are known
+        unknown_entity_names = scenario_entity_specs.keys() - entity_specs.keys()
+        if unknown_entity_names:
+            raise Exception(f'Entity specs must be provided, names={list(unknown_entity_names)}')
+        
+        logger.info(f'Run scenario, name={scenario_name}')
         for entity_mocker in entity_mockers:
             scenario_entity_spec = scenario_entity_specs.get(entity_mocker.entity_spec.name)
             if scenario_entity_spec:
                 entity_mocker.load_entity_records()
                 entity_mocker.mock(scenario_entity_spec)
     else:
-        raise Exception(f'A scenario must be specified, scenarios={list(scenario_specs.keys())}')
+        raise Exception(f'A scenario must be specified with --scenario, scenarios={list(scenario_specs.keys())}')
 
 parser = argparse.ArgumentParser(description='Mock database data')
 parser.add_argument('--debug', action='store_true', help='Enable debug log')
