@@ -45,7 +45,7 @@ def main(**kwargs):
         logger.remove(0)
         logger.add(sys.stderr, level='INFO')
     
-    input_files = kwargs['input_file'] + [ os.path.join(input_dir, input_file) for input_dir in kwargs['input_dir'] for input_file in os.listdir(input_dir) ]
+    input_files = kwargs['input_file'] + [os.path.join(root, file) for root, _, files in os.walk(kwargs['input_dir']) for file in files]
     input_files = set(input_files)
 
     scenario_specs: Dict[str, ScenarioSpec] = {}
@@ -153,7 +153,7 @@ def main(**kwargs):
 
 parser = argparse.ArgumentParser(description='Mock database data')
 parser.add_argument('--debug', action='store_true', help='Enable debug log')
-parser.add_argument('--input_dir', type=str, action='append', default=[], help='Directory that contains input yaml files')
+parser.add_argument('--input_dir', type=str, default='input', required=False, help='Directory that contains input yaml files')
 parser.add_argument('--input_file', type=str, action='append', default=[], help='Yaml file')
 parser.add_argument('--scenario', type=str, default=None, required=False, help='Scenario')
 
