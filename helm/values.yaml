@@ -1,0 +1,40 @@
+image:
+  repository: simplecon/em
+  pullPolicy: Always
+  tag: latest
+
+containerSecurityContext:
+    enabled: true
+    seLinuxOptions: {}
+    runAsUser: 1001
+    runAsGroup: 1001
+    runAsNonRoot: true
+    privileged: false
+    readOnlyRootFilesystem: true
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop: ["ALL"]
+    seccompProfile:
+      type: "RuntimeDefault"
+
+podSecurityContext:
+    enabled: true
+    fsGroupChangePolicy: Always
+    sysctls: []
+    supplementalGroups: []
+    fsGroup: 1001
+  
+cronjob:
+  enabled: true
+  schedule: ""
+
+externalDatabase:
+  postgres:
+    enabled: true
+    host: ""
+    database: ""
+    port: 5432
+    user: ""
+    password: ""
+
+extraInputFiles: {}

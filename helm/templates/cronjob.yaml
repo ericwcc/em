@@ -1,0 +1,52 @@
+{{- if $.Values.cronjob.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: "{{ include "em.name" . }}"
+  labels:
+    {{- include "em.labels" . | nindent 4 }}
+spec: 
+  schedule: {{ $.Values.cronjob.schedule | quote }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "em.labels" . | nindent 12 }}
+          annotations:
+            {{- if $.Values.extraInputFiles }}
+            checksum/configmap-input: {{ include (print $.Template.BasePath "/configmap-input.yaml") . | sha256sum }}
+            {{- end }}
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            {{- toYaml $.Values.podSecurityContext | nindent 12 }}
+          containers:
+            - name: em
+              securityContext:
+                {{- toYaml $.Values.containerSecurityContext | nindent 16 }}
+              image: {{ include "em.image" . }}
+              imagePullPolicy: {{ $.Values.image.pullPolicy }}
+              env:
+              {{- if $.Values.externalDatabase.postgres.enabled }}
+                - name: POSTGRES_HOST
+                  value: {{ $.Values.externalDatabase.postgres.host }}
+                - name: POSTGRES_DATABASE
+                  value: {{ $.Values.externalDatabase.postgres.database }}
+                - name: POSTGRES_USER
+                  value: {{ $.Values.externalDatabase.postgres.user }}
+                - name: POSTGRES_PASSWORD
+                  value: {{ $.Values.externalDatabase.postgres.password }}
+              {{- end }}
+              {{- if $.Values.extraInputFiles }}
+              volumeMounts:
+                - mountPath: /opt/em/input
+                  name: {{ include "em.name" . }}-input
+              {{- end }}
+          volumes:
+            {{- if $.Values.extraInputFiles }}
+            - name: input
+              configMap:
+                name: {{ include "em.name" . }}-input
+            {{- end }}
+{{- end }}

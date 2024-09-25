@@ -1,0 +1,9 @@
+{{- if $.Values.extraInputFiles }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "em.name" . }}-input
+  labels:
+    {{- include "em.labels" . | nindent 4 }}
+data: {{ tpl (toYaml $.Values.extraInputFiles) . | nindent 2 }}
+{{- end }}
